@@ -1,12 +1,6 @@
 NAME
     Net::Nslookup - Provide nslookup(1)-like capabilities
 
-ABSTRACT
-    Net::Nslookup provides the capabilities of the standard UNIX command
-    line tool nslookup(1). Net::DNS is a wonderful and full featured module,
-    but quite often, all you need is `nslookup $host`. This module provides
-    that functionality.
-
 SYNOPSIS
       use Net::Nslookup;
       my @addrs = nslookup $host;
@@ -14,8 +8,13 @@ SYNOPSIS
       my @mx = nslookup(qtype => "MX", domain => "perl.org");
 
 DESCRIPTION
-    Net::Nslookup exports a single function, called nslookup. nslookup can
-    be used to retrieve A, PTR, CNAME, MX, and NS records.
+    Net::Nslookup provides the capabilities of the standard UNIX command
+    line tool nslookup(1). Net::DNS is a wonderful and full featured module,
+    but quite often, all you need is `nslookup $host`. This module provides
+    that functionality.
+
+    Net::Nslookup exports a single function, called "nslookup". "nslookup"
+    can be used to retrieve A, PTR, CNAME, MX, and NS records.
 
       my $a  = nslookup(host => "use.perl.org", type => "A");
 
@@ -23,12 +22,13 @@ DESCRIPTION
 
       my @ns = nslookup(domain => "perl.org", type => "NS");
 
-    nslookup takes a hash of options, one of which should be ``term'', and
+    nslookup takes a hash of options, one of which should be *term*, and
     performs a DNS lookup on that term. The type of lookup is determined by
-    the ``type'' (or ``qtype'') argument.
+    the *type* (or *qtype*) argument.
 
-    If only a single argument is passed in, the type defaults to ``A'', that
-    is, a normal A record lookup.
+    If only a single argument is passed in, the type defaults to *A*, that
+    is, a normal A record lookup. This form is significantly faster than
+    using the full version, as it doesn't load Net::DNS for this.
 
     If nslookup is called in a list context, and there is more than one
     address, an array is returned. If nslookup is called in a scalar
@@ -37,18 +37,17 @@ DESCRIPTION
     then, naturally, it will be the only one returned, regardless of the
     calling context.
 
-    ``domain'' and ``host'' are synonyms for ``term'', and can be used to
-    make client code more readable. For example, use ``domain'' when getting
-    NS records, and use ``host'' for A records; both do the same thing.
+    *domain* and *host* are synonyms for *term*, and can be used to make
+    client code more readable. For example, use *domain* when getting NS
+    records, and use *host* for A records; both do the same thing.
+
+TIMEOUTS
+    Lookups timeout after $Net::Nslookup::TIMEOUT seconds (default 15). Set
+    this to something more reasonable for your site or script.
 
 DEBUGGING
     Set $Net::Nslookup::DEBUG to a true value to get debugging messages
     carped to STDERR.
-
-FUTURE DIRECTIONS
-    Eventually, this module should be able to work without having Net::DNS
-    installed; currently, Net::Nslookup's functionality is dependent upon
-    that module.
 
 TODO
     *   Support for TXT and SOA records.
