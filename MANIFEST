@@ -2,3 +2,4 @@ MANIFEST
 README
 Makefile.PL
 lib/Net/Nslookup.pm
+test.pl

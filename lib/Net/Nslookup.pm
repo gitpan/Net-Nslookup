@@ -34,18 +34,18 @@ provides that functionality.
   use Net::Nslookup;
   my @addrs = nslookup $host;
 
-  my @mx = nslookup(qtype => "MX", domain => "boston.com");
+  my @mx = nslookup(qtype => "MX", domain => "perl.org");
 
 =head1 DESCRIPTION
 
 Net::Nslookup exports a single function, called nslookup.  nslookup
 can be used to retrieve A, PTR, CNAME, MX, and NS records.
 
-  my $a = nslookup(host => "www.boston.com", type => "A");
+  my $a  = nslookup(host => "use.perl.org", type => "A");
 
-  my @mx = nslookup(domain => "boston.com", type => "MX");
+  my @mx = nslookup(domain => "perl.org", type => "MX");
 
-  my @ns = nslookup(domain => "boston.com", type => "NS");
+  my @ns = nslookup(domain => "perl.org", type => "NS");
 
 B<nslookup> takes a hash of options, one of which should be ``term'',
 and performs a DNS lookup on that term.  The type of lookup is
@@ -72,7 +72,7 @@ use strict;
 use vars qw($VERSION $DEBUG @EXPORT $res);
 use base qw(Exporter);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
 @EXPORT  = qw(nslookup);
 $DEBUG   = 0 unless defined $DEBUG;
 
@@ -90,6 +90,8 @@ $_lookups{uc $_} = $_lookups{$_} for (keys %_lookups);
 
 sub nslookup {
     $res ||= Net::DNS::Resolver->new;
+    return unless @_;
+
     my %options;
     my @answers;
 
@@ -144,7 +146,7 @@ sub _lookup_mx ($\@) {
     $DEBUG && carp("Performing 'MX' lookup on `$term'");
     my @mx = mx($res, $term);
     for my $rr (@mx) {
-        push @{$answers}, $rr->exchange;
+        push @{$answers}, nslookup(type => "A", host => $rr->exchange);
     }
 }
 
@@ -154,7 +156,7 @@ sub _lookup_ns ($\@) {
 
     my $query = $res->search($term, "NS") || return;
     for my $rr ($query->answer) {
-        push @{$answers}, $rr->nsdname;
+        push @{$answers}, nslookup(type => "A", host => $rr->nsdname);
     }
 }
 
