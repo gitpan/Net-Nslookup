@@ -1,0 +1,61 @@
+2001-09-21 12:14  dlc
+
+	* Changes: Added Changes file.
+
+2001-09-20 09:09  dlc
+
+	* README: Updated with new POD.
+
+2001-09-20 09:08  dlc
+
+	* MANIFEST, lib/Net/Nslookup.pm: Added test.pl to MANIFEST. 
+	Updated examples in Nslookup.pm to correspond with the tests in
+	test.pl.
+
+2001-09-20 09:07  dlc
+
+	* test.pl: Added functional tests (does lookups against perl.org
+	hosts).
+
+2001-09-20 08:58  dlc
+
+	* lib/Net/Nslookup.pm: Calls to nslookup return if there is nothing
+	passed in, but after creating the Net::DNS::Resolver object. This
+	can be used to "seed" the module by pre-creating the object. 
+	Lookups of MX and NS records return IP addresses rather than
+	hostnames, by recursively calling nslookup as needed.
+
+2001-09-19 10:56  dlc
+
+	* test.pl: Added test.pl.
+
+2001-09-17 10:11  dlc
+
+	* MANIFEST, README, lib/Net/Nslookup.pm: Significant rewrite of the
+	internals.  Added README.
+
+2001-09-13 16:58  dlc
+
+	* lib/Net/Nslookup.pm: POD updates.
+
+2001-09-13 14:39  dlc
+
+	* lib/Net/Nslookup.pm: Added _lookup prefix to _a, _ns, _mx.  Added
+	prototypes to _lookup_{a,ns,mx}.
+
+2001-09-13 12:35  dlc
+
+	* MANIFEST, Makefile.PL, lib/Net/Nslookup.pm: Many changes.
+
+2001-09-13 10:16  dlc
+
+	* Makefile: Removed some files.
+
+2001-09-13 10:15  dlc
+
+	* MANIFEST, Makefile, Makefile.PL: Initial revision
+
+2001-09-13 10:15  dlc
+
+	* MANIFEST, Makefile, Makefile.PL: Net::DNS::Utils
+

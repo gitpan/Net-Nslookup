@@ -69,12 +69,13 @@ thing.
 =cut
 
 use strict;
-use vars qw($VERSION $DEBUG @EXPORT $res);
+use vars qw($VERSION $DEBUG @EXPORT $res @SEARCH);
 use base qw(Exporter);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
 @EXPORT  = qw(nslookup);
 $DEBUG   = 0 unless defined $DEBUG;
+@SEARCH  = () unless @SEARCH;
 
 use Carp;
 use Exporter;
@@ -87,6 +88,34 @@ my %_lookups = (
     'ns'    => \&_lookup_ns,
 );
 $_lookups{uc $_} = $_lookups{$_} for (keys %_lookups);
+
+# Import gets called when the module is used.  We take advantage of
+# this subroutine to get the search or domain information from the
+# /etc/resolv.conf.  See resolv.conf(5) for the syntax of this file
+# and a decent explanation of the nuances of the process.
+sub import {
+    my $class = shift;
+    if (@_) {
+        # If stuff is passed in, then it should
+        # be used as search domains
+        @SEARCH = @_;
+    } elsif (defined $ENV{'LOCALDOMAIN'}) {
+        # No stuff passed in; use $ENV{'LOCALDOMAIN'}, if it exists...
+        @SEARCH = split /\s+/, $ENV{'LOCALDOMAIN'}; 
+    } else {
+        # ...or /etc/resolv.conf, if it exists.
+        if (-r "/etc/resolv.conf") {
+            open RESOLV, "/etc/resolv.conf"
+                or warn "Can't open /etc/resolv.conf: $!";
+            @SEARCH = split /\s+/, (grep /^(domain|search)/, <RESOLV>)[-1];
+            close RESOLV or die "Can't close /etc/resolv.conf: $!";
+
+            shift @SEARCH if @SEARCH;
+        }
+    }
+    ($DEBUG) && carp("Using search path: @SEARCH");
+    $class->export_to_level(1, @EXPORT);
+}
 
 sub nslookup {
     $res ||= Net::DNS::Resolver->new;
@@ -127,7 +156,25 @@ sub nslookup {
 
 sub _lookup_a ($\@) {
     my ($term, $answers) = @_;
-    my $query = $res->search($term) || return;
+    my (@terms, $query);
+
+    # Terms that are fully qualified to the origin (end with a .)
+    # and numeric terms (PTR lookups) are not subjected to the
+    # search path; everything else is.
+    if ($term =~ /\.$/ || $term !~ /[^0-9.]/) {
+        @terms = ($term);
+    } else {
+        # XXX Is this correct?  Can any lookup be suffixed by "."?
+        @terms = map "$term.$_", ("", @SEARCH);
+    }
+
+    for (@terms) {
+        ($DEBUG) && carp("Lookup at ``$_''");
+        $query = $res->search($_);
+        last if defined $query;
+    }
+
+    return unless defined $query;
 
     $DEBUG && carp("Performing 'A' lookup on `$term'");
     foreach my $rr ($query->answer) {
@@ -163,10 +210,32 @@ sub _lookup_ns ($\@) {
 1;
 __END__
 
+=head1 CONTROLLING SEARCH DOMAINS
+
+Similar to nslookup, Net::Nslookup will try to complete host names
+that do no appear to be fully qualified.  There are three ways to
+specify a search path: first, by passing arguments to the import()
+method (called when the module is used):
+
+  use Net::Nslookup qw(perl.org perl.com);
+
+There can be as many domains as you need; they are searched in order,
+and the search stops as soon as a match is found.
+
+The second way to set a search path is by setting the environment
+variable LOCALDOMAIN to a space-separated list of domains; see
+resolv.conf(5) for details.
+
+Finally, ``search'' or ``domain'' entries in /etc/resolv.conf are
+honored, using the same rules as nslookup.  The man page for
+resolv.conf specifies that the last occurance of either domain or
+search is the one that is used; search can be a space-separated list
+of domains, similar to the LOCALDOMAIN environment variable.
+
 =head1 DEBUGGING
 
-Set $Net::Nslookup::DEBUG to a true value to get debugging
-messages carped to STDERR.
+Set $Net::Nslookup::DEBUG to a true value to get debugging messages
+carped to STDERR.
 
 =head1 FUTURE DIRECTIONS
 
