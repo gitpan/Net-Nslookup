@@ -1,7 +1,7 @@
 package Net::Nslookup;
 
 # -------------------------------------------------------------------
-# $Id: Nslookup.pm,v 1.6 2003/09/12 15:27:03 dlc Exp $
+# $Id: Nslookup.pm,v 1.8 2004/08/11 18:50:35 dlc Exp $
 # -------------------------------------------------------------------
 #  Net::Nslookup - Provide nslookup(1)-like capabilities
 #  Copyright (C) 2002 darren chamberlain <darren@cpan.org>
@@ -25,7 +25,7 @@ use strict;
 use vars qw($VERSION $DEBUG @EXPORT $TIMEOUT $MX_IS_NUMERIC $WIN32);
 use base qw(Exporter);
 
-$VERSION = 1.15;
+$VERSION = 1.16;
 @EXPORT  = qw(nslookup);
 $DEBUG   = 0 unless defined $DEBUG;
 $TIMEOUT = 15 unless defined $TIMEOUT;
@@ -46,6 +46,7 @@ my %_lookups = (
     'mx'    => \&_lookup_mx,
     'ns'    => \&_lookup_ns,
     'ptr'   => \&_lookup_ptr,
+	'txt'	=> \&_lookup_txt,
 );
 
 # ----------------------------------------------------------------------
@@ -159,6 +160,21 @@ sub _lookup_ptr {
 
     return @answers;
 }
+
+sub _lookup_txt ($\@) {
+    my ($term, $server) = @_;
+    my $res = ns($server);
+    my (@answers, $query, $rr);
+
+    debug("Performing 'TXT' lookup on `$term'");
+
+    $query = $res->search($term, "TXT") || return;
+    for $rr ($query->answer) {
+        push @answers, $rr->rdatastr();
+    }
+
+    return @answers;
+}	
 
 {
     my %res;
