@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-Nslookup
-version:            2.00
+version:            2.01
 abstract:           Provide nslookup(1)-like capabilities
 author:
     - darren chamberlain <darren@cpan.org>
